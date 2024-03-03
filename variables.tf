@@ -69,3 +69,11 @@ variable "database_route_table_tags" {
 variable "db_subnet_group_tags" {
   default = {}
 }
+
+variable "requester_vpc_id" {
+  default = {} 
+}
+
+variable "is_peering_required" {
+  default = false
+}

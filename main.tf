@@ -182,3 +182,19 @@ resource "aws_db_subnet_group" "default" {
     var.db_subnet_group_tags
   )
 }
+
+### VPC Peering with Default VPC
+resource "aws_vpc_peering_connection" "default" {
+  count = var.is_peering_required ? 1 : 0
+  # peer_owner_id = var.peer_owner_id
+  peer_vpc_id   = aws_vpc.main.id
+  vpc_id        = var.requester_vpc_id
+  auto_accept   = true
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "VPC Peering between default vpc and ${var.project_name} vpc"
+    }
+  )
+}
