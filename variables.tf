@@ -77,3 +77,11 @@ variable "requester_vpc_id" {
 variable "is_peering_required" {
   default = false
 }
+
+variable "default_route_table_id" {
+  default = {}
+}
+
+variable "default_cidr_block" {
+  
+}

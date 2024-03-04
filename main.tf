@@ -73,10 +73,10 @@ resource "aws_subnet" "database" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
-  }
+  # route {
+  #   cidr_block = "0.0.0.0/0"
+  #   gateway_id = aws_internet_gateway.gw.id
+  # }
 
   tags = merge(
     var.common_tags,
@@ -85,6 +85,12 @@ resource "aws_route_table" "public" {
     },
     var.public_route_table_tags
   )
+}
+# Adding Route Supperately..to avoid conflicts during peering connections
+resource "aws_route" "public_route" {
+  route_table_id            = aws_route_table.public.id
+  destination_cidr_block    = "0.0.0.0/0"
+  gateway_id = aws_internet_gateway.gw.id
 }
 
 # Creating ElasticIP for NAT Gateway
@@ -119,10 +125,10 @@ resource "aws_nat_gateway" "ngw" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.ngw.id
-  }
+  # route {
+  #   cidr_block = "0.0.0.0/0"
+  #   nat_gateway_id = aws_nat_gateway.ngw.id
+  # }
 
   tags = merge(
     var.common_tags,
@@ -133,13 +139,18 @@ resource "aws_route_table" "private" {
   )
 }
 
+resource "aws_route" "private_route" {
+  route_table_id            = aws_route_table.private.id
+  destination_cidr_block    = "0.0.0.0/0"
+  nat_gateway_id = aws_nat_gateway.ngw.id
+}
 resource "aws_route_table" "database" {
   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.ngw.id
-  }
+  # route {
+  #   cidr_block = "0.0.0.0/0"
+  #   nat_gateway_id = aws_nat_gateway.ngw.id
+  # }
 
   tags = merge(
     var.common_tags,
@@ -148,6 +159,12 @@ resource "aws_route_table" "database" {
     },
     var.database_route_table_tags
   )
+}
+
+resource "aws_route" "database_route" {
+  route_table_id            = aws_route_table.database.id
+  destination_cidr_block    = "0.0.0.0/0"
+  nat_gateway_id = aws_nat_gateway.ngw.id
 }
 
 resource "aws_route_table_association" "public" {
@@ -183,18 +200,3 @@ resource "aws_db_subnet_group" "default" {
   )
 }
 
-### VPC Peering with Default VPC
-resource "aws_vpc_peering_connection" "default" {
-  count = var.is_peering_required ? 1 : 0
-  # peer_owner_id = var.peer_owner_id
-  peer_vpc_id   = aws_vpc.main.id
-  vpc_id        = var.requester_vpc_id
-  auto_accept   = true
-
-  tags = merge(
-    var.common_tags,
-    {
-      Name = "VPC Peering between default vpc and ${var.project_name} vpc"
-    }
-  )
-}
